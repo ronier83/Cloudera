@@ -15,11 +15,8 @@ async def save_cursor(cursor):
 
 async def process_event(admin, event):
     """Process an event"""
-    param = Object()
-    param.folder_id = event.folder_id
-    param.guid = event.guid
     if event.type == 'file' and not event.deleted:
-        ancestors = await admin.v2.api.post('/metadata/ancestors', param)
+        ancestors = await admin.notifications.ancestors(event)
         cloud_folder = await admin.v1.api.get(f'/objs/{event.folder_id}')
         fullpath = Path(cloud_folder.webDavPartialUrl).joinpath(
             Path(*[ancestor.name for ancestor in ancestors[1:]])).as_posix()

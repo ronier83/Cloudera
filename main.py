@@ -14,11 +14,8 @@ async def save_cursor(cursor):
 
 async def process_event(admin, event):
     """Process an event"""
-    param = Object()
-    param.folder_id = event.folder_id
-    param.guid = event.guid
     if event.type == 'file' and not event.deleted:
-        ancestors = await admin.v2.api.post('/metadata/ancestors', param)
+        ancestors = await admin.notifications.ancestors(event)
         cloud_folder = await admin.v1.api.get(f'/objs/{event.folder_id}')
         fullpath = Path(cloud_folder.webDavPartialUrl).joinpath(
             Path(*[ancestor.name for ancestor in ancestors[1:]])).as_posix()
@@ -30,7 +27,7 @@ async def process_event(admin, event):
             async for chunk in response.chunk():
                 fd.write(chunk)
     else:
-        print(f'{event.name} is a folder, Skipping Download...')
+        print(f'{event.name} is a Folder or Deleted, Skipping Download...')
 
 
 async def worker(admin, queue):
@@ -48,8 +45,8 @@ async def worker(admin, queue):
 async def main():
     cursor = None
     queue = asyncio.Queue()  # Shared queue between producer and consumer threads
-    async with AsyncGlobalAdmin('portal-address') as admin:
-        await admin.login('admin-user', 'admin-pass')
+    async with AsyncGlobalAdmin('192.168.27.202') as admin:
+        await admin.login('admin', 'password1!')
         """Start event producer service."""
         admin.notifications.service.run(queue, save_cursor, cursor=cursor)
         """Start event consumer to process events"""
