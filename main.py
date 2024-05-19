@@ -22,7 +22,7 @@ async def process_event(admin, event):
         cloud_folder = await admin.v1.api.get(f'/objs/{event.folder_id}')
         fullpath = Path(cloud_folder.webDavPartialUrl).joinpath(
             Path(*[ancestor.name for ancestor in ancestors[1:]])).as_posix()
-        print(fullpath)
+        print(f' Downloading: {fullpath}...')
         response = await admin._generic.get(f'/admin/webdav/{fullpath}')
         local_path = fullpath.lstrip('/').replace('%20', ' ')
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
