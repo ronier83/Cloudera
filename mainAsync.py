@@ -3,6 +3,7 @@ import logging
 from cterasdk import AsyncGlobalAdmin, settings, Object
 from pathlib import Path
 import os
+import aiofiles
 
 settings.sessions.management.ssl = False
 
@@ -23,12 +24,12 @@ async def process_event(admin, event):
         fullpath = Path(cloud_folder.webDavPartialUrl).joinpath(
             Path(*[ancestor.name for ancestor in ancestors[1:]])).as_posix()
         print(f'Downloading: {fullpath}...')
-        response = await admin._generic.get(f'/admin/webdav/{fullpath}')
+        response = await admin.io.webdav.download(fullpath)
         local_path = fullpath.lstrip('/').replace('%20', ' ')
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
-        with open(local_path, 'w+b') as fd:
+        async with aiofiles.open(local_path, 'w+b') as f:
             async for chunk in response.chunk():
-                fd.write(chunk)
+                await f.write(chunk)
     else:
         print(f'{event.name} is a folder, Skipping Download...')
 
@@ -48,7 +49,7 @@ async def worker(admin, queue):
 async def main():
     cursor = None
     queue = asyncio.Queue()  # Shared queue between producer and consumer threads
-    async with AsyncGlobalAdmin('portal-address') as admin:
+    async with AsyncGlobalAdmin('portal.ctera.me') as admin:
         await admin.login('admin-user', 'admin-pass')
         """Start event producer service."""
         admin.notifications.service.run(queue, save_cursor, cursor=cursor)
