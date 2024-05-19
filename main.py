@@ -48,8 +48,8 @@ async def worker(admin, queue):
 async def main():
     cursor = None
     queue = asyncio.Queue()  # Shared queue between producer and consumer threads
-    async with AsyncGlobalAdmin('192.168.27.202') as admin:
-        await admin.login('admin', 'password1!')
+    async with AsyncGlobalAdmin('3.253.91.101') as admin:
+        await admin.login('admin', 'Password1!')
         """Start event producer service."""
         admin.notifications.service.run(queue, save_cursor, cursor=cursor)
         """Start event consumer to process events"""
