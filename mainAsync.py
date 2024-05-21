@@ -1,15 +1,17 @@
 import asyncio
 import logging
-from cterasdk import AsyncGlobalAdmin, settings, Object
+from cterasdk import AsyncGlobalAdmin, settings
 from pathlib import Path
 import os
 import aiofiles
 
 settings.sessions.management.ssl = False
 
+
 async def save_cursor(cursor):
     print(cursor)
     """Use this function to persist the cursor"""
+
 
 async def get_fullpath(admin, event):
     ancestors = await admin.notifications.ancestors(event)  
@@ -19,28 +21,33 @@ async def get_fullpath(admin, event):
     response = await admin.io.webdav.download(fullpath)
     return fullpath, response
 
-async def get_localpath(fullpath):
+
+async def get_local_path(fullpath):
     local_path = fullpath.lstrip('/').replace('%20', ' ')
     return local_path
 
+
 async def mkdir_local(local_path):
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
+
 
 async def download_file(local_path, response):
     async with aiofiles.open(local_path, 'w+b') as f:
         async for chunk in response.chunk():
             await f.write(chunk)
 
+
 async def process_event(admin, event):
     """Process an event"""
     if event.type == 'file' and not event.deleted:
         fullpath, response = await get_fullpath(admin, event)
-        local_path = await get_localpath(fullpath)
+        local_path = await get_local_path(fullpath)
         await mkdir_local(local_path)
         print(f'Downloading: {fullpath}...')
         await download_file(local_path, response)
     else:
         print(f'{event.name} is a folder or a deleted file, Skipping Download...')
+
 
 async def worker(admin, queue):
     """Sample worker thread"""
@@ -52,6 +59,7 @@ async def worker(admin, queue):
             logging.getLogger().error(f' {e} Error Message')
         finally:
             queue.task_done()  # Service will not produce events unless all tasks are done.
+
 
 async def main():
     cursor = None
