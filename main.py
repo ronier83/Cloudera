@@ -16,7 +16,7 @@ async def process_event(admin, event):
     """Process an event"""
     if event.type == 'file' and not event.deleted:
         ancestors = await admin.notifications.ancestors(event)
-        cloud_folder = await admin.v1.api.get(f'/objs/{event.folder_id}')
+        cloud_folder = await admin.v1.api.get(f'/   objs/{event.folder_id}')
         fullpath = Path(cloud_folder.webDavPartialUrl).joinpath(
             Path(*[ancestor.name for ancestor in ancestors[1:]])).as_posix()
         print(f'Downloading: {fullpath}...')
